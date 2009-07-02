@@ -1,0 +1,54 @@
+#!/bin/bash
+case x"$1" in
+	x--help )
+	echo `basename $0` specfile
+	exit
+	;;
+esac;
+
+for parameter in $*; do
+if echo $parameter | grep '.spec$' ; then
+	SPECFILE=$parameter
+fi;
+done;
+if [ "x$SPECFILE" == "x" ]; then
+	echo SPECFILE is not specified;
+	exit;
+fi
+
+RPMBUILD=~/rpmbuild
+
+if ! [ -f $SPECFILE ]; then
+	echo $SPECFILE doesnt exist;
+	exit;
+fi;
+
+if rpmlint $SPECFILE | grep "E:" ; then
+	echo $SPECFILE is broken;
+	exit;
+fi;
+
+TMP=`mktemp /tmp/tmpXXXXXX`
+
+function fetch {
+	grep -i ^$1 $SPECFILE |awk '{print $2;}'	
+}
+
+version=`fetch Version`
+name=`fetch Name`
+echo $version $name
+grep -i -e 'Source.*' $SPECFILE |
+sed -e "s;%{version};$version;" \
+    -e "s;%{name};$name;" \
+ > $TMP
+for file in * ; do
+if grep -e $file $TMP; then
+	echo $file is a source file, copy to $RPMBUILD/SOURCES
+	mkdir -p $RPMBUILD/SOURCES
+	cp $file $RPMBUILD/SOURCES
+fi;
+done;
+
+rm $TMP
+
+rpmbuild $*
