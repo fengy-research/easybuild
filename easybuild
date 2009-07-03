@@ -47,6 +47,23 @@ function cleanup {
 	exit;
 }
 
+function check_rpmbuild {
+	if ! [ -d $RPMBUILD ]; then
+		ERR="$RPMBUILD not found, try --init"
+	fi;
+	if ! [ -f $HOME/.rpmmacros ]; then 
+		ERR="$HOME/.rpmmacros not found, try --init"
+	fi;
+	if ! [ -x `which rpmbuild` ]; then
+		ERR="rpmbuild not found"
+	fi;
+	if ! [ -x `which rpmlint` ]; then 
+		ERR="rpmlint not found"
+	fi;
+	if [ "x$ERR" != x ]; then
+		fail "$ERR";
+	fi;
+}
 ARGS=
 for parameter in $*; do
 if echo $parameter | grep '.spec$' ; then
@@ -79,6 +96,8 @@ fi;
 if [ "x$CLEANUP" == "xyes" ]; then
 	cleanup
 fi;
+
+check_rpmbuild
 
 if [ "x$SPECFILE" == "x" ]; then
 	fail "SPECFILE is not specified.";
