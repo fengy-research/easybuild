@@ -1,5 +1,7 @@
 #!/bin/bash
 
+RPMBUILD=$HOME/rpmbuild
+
 function fail {
 	echo Failure: $1;
 	exit 1;
@@ -9,13 +11,40 @@ function fetch_variable {
 	grep -i ^$1 $SPECFILE |awk '{print $2;}'	
 }
 
-
-case x"$1" in
-	x--help )
-	echo `basename $0` specfile
-	exit
-	;;
-esac;
+function help {
+	EXECNAME=`basename $0`
+	echo "Locally build RPMs from a OSC tree."
+	echo 
+	echo "$EXECNAME [--init | --cleanup] [--skip-rpmlint] rpmbuild-parameters specfile"
+	echo 
+	echo "--init        : initialize rpmbuild tree at $RPMBUILD"
+	echo "--cleanup     : remove the rpmbuild tree at $RPMBUILD"
+	echo "--skip-rpmlint: skip rpmlint before rpmbuild"
+	exit;
+}
+function init {
+	if ! [ -x `which rpmbuild` ]; then
+		fail "rpmbuild not found, install rpmbuild"
+	fi;
+	mkdir -p $RPMBUILD
+	mkdir -p $RPMBUILD/RPMS
+	mkdir -p $RPMBUILD/SRPMS
+	mkdir -p $RPMBUILD/SOURCES
+	mkdir -p $RPMBUILD/SPECS
+cat > $HOME/.rpmmacros <<EOF
+%_topdir $RPMBUILD
+%_smp_mflags  -j3
+%__arch_install_post   /usr/lib/rpm/check-rpaths   /usr/lib/rpm/check-buildroot
+EOF
+	find $RPMBUILD -type d
+	cat $HOME/.rpmmacros
+	exit;
+}
+function cleanup {
+	rm -f $HOME/.rpmmacros
+	rm -rf $RPMBUILD
+	exit;
+}
 
 ARGS=
 for parameter in $*; do
@@ -30,40 +59,28 @@ case "x$parameter" in
 	INIT=yes ;;
 	x--cleanup | x-C )
 	CLEANUP=yes ;;
+	x--help | x-h )
+	HELP=yes ;;
 esac || ARGS+=$parameter;
 fi;
 done;
 
+if [ "x$HELP" == "xyes" ]; then
+	help;
+fi;
+
 if [ "x$INIT" == "xyes" ]; then
-	if ! [ -x `which rpmbuild` ]; then
-		fail "rpmbuild not found, install rpmbuild"
-	fi;
-	mkdir -p $HOME/rpmbuild
-	mkdir -p $HOME/rpmbuild/RPMS
-	mkdir -p $HOME/rpmbuild/SRPMS
-	mkdir -p $HOME/rpmbuild/SOURCES
-	mkdir -p $HOME/rpmbuild/SPECS
-cat > $HOME/.rpmmacros <<EOF
-%_topdir $HOME/rpmbuild
-%_smp_mflags  -j3
-%__arch_install_post   /usr/lib/rpm/check-rpaths   /usr/lib/rpm/check-buildroot
-EOF
-	find $HOME/rpmbuild -type d
-	cat $HOME/.rpmmacros
-	exit;
+	init
 fi;
 
 if [ "x$CLEANUP" == "xyes" ]; then
-	rm -f $HOME/.rpmmacros
-	rm -rf $HOME/rpmbuild
-	exit;
+	cleanup
 fi;
 
 if [ "x$SPECFILE" == "x" ]; then
 	fail "SPECFILE is not specified.";
 fi
 
-RPMBUILD=~/rpmbuild
 
 if ! [ -f $SPECFILE ]; then
 	fail "$SPECFILE doesnt exist.";
@@ -94,3 +111,4 @@ done;
 rm $TMP
 
 rpmbuild $ARGS
+
