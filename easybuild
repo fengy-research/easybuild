@@ -28,6 +28,7 @@ function init {
 	fi;
 	mkdir -p $RPMBUILD
 	mkdir -p $RPMBUILD/RPMS
+	mkdir -p $RPMBUILD/BUILD
 	mkdir -p $RPMBUILD/SRPMS
 	mkdir -p $RPMBUILD/SOURCES
 	mkdir -p $RPMBUILD/SPECS
@@ -50,7 +51,7 @@ ARGS=
 for parameter in $*; do
 if echo $parameter | grep '.spec$' ; then
 	SPECFILE=$parameter
-	ARGS+=$parameter
+	ARGS="$ARGS $parameter"
 else
 case "x$parameter" in
 	x--skip-rpmlint | x-S )
@@ -61,7 +62,9 @@ case "x$parameter" in
 	CLEANUP=yes ;;
 	x--help | x-h )
 	HELP=yes ;;
-esac || ARGS+=$parameter;
+	*)
+	ARGS="$ARGS $parameter";;
+esac 
 fi;
 done;
 
@@ -109,6 +112,12 @@ fi;
 done;
 
 rm $TMP
+echo args = $ARGS
+rpmbuild $ARGS > $TMP
+for file in `grep "^Wrote" $TMP | awk '{print $2;}'`; do
+	echo $file is created and moved to current directory
+	mv $file .
+done
+echo DONE
 
-rpmbuild $ARGS
 
