@@ -13,13 +13,19 @@ function fetch_variable {
 
 function help {
 	EXECNAME=`basename $0`
-	echo "Locally build RPMs from a OSC tree."
-	echo 
-	echo "$EXECNAME [--init | --cleanup] [--skip-rpmlint] rpmbuild-parameters specfile"
-	echo 
-	echo "--init        : initialize rpmbuild tree at $RPMBUILD"
-	echo "--cleanup     : remove the rpmbuild tree at $RPMBUILD"
-	echo "--skip-rpmlint: skip rpmlint before rpmbuild"
+cat <<EOF
+Locally build RPMs from a OSC tree.
+
+$EXECNAME [--init | --cleanup] [--skip-rpmlint] rpmbuild-parameters specfile
+
+	--init        : initialize rpmbuild tree at $RPMBUILD
+	--cleanup     : remove the rpmbuild tree at $RPMBUILD
+	--skip-rpmlint: skip rpmlint before rpmbuild
+
+Source code and patches are supplied in the current directory.
+Built rpms are moved to the current directory.
+Don't forget \`$EXECNAME --init' the first time running this program.
+EOF
 	exit;
 }
 function init {

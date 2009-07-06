@@ -1,0 +1,47 @@
+easybuild help you build RPMS.
+
+it works on RedHat, Fedora, OpenSUSE and perhaps also SUSE.
+
+== Obtain ==
+
+git clone git://github.com/fengy-research/easybuild.git
+
+The code goes into the `easybuild' directory.
+
+== Requirements ==
+
+on Fedora/Redhat
+yum install rpmbuild  rpmlint
+
+on OpenSUSE
+zypper install build rpmlint
+
+== Install ==
+
+su -c 'make install bindir=/usr'
+
+== Usage ==
+
+$ easybuild --help
+
+Locally build RPMs from a OSC tree.
+
+easybuild [--init | --cleanup] [--skip-rpmlint] rpmbuild-parameters specfile
+
+--init        : initialize rpmbuild tree at $HOME/rpmbuild
+--cleanup     : remove the rpmbuild tree at $HOME/rpmbuild
+--skip-rpmlint: skip rpmlint before rpmbuild
+
+All source code and patches are supplied in the current directory.
+The built rpms are moved to the current directory.
+Don't forget `$EXECNAME --init' the first time running this program.
+
+
+== Copyright & Author ==
+
+More legal descriptions are to be added.
+
+GPLv3
+
+yfeng@novell.com
+
